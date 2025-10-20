@@ -53,3 +53,5 @@ export function Sky({ isRotating, ...props }: SkyProps) {
 
 // Preload the sky model to improve performance
 useGLTF.preload('/assets/3d/transformed/sky-transformed.glb')
+
+export default Sky

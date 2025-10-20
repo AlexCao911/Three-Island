@@ -90,3 +90,5 @@ export function Plane({ ...props }: PlaneProps) {
 
 // Preload the plane model to improve performance
 useGLTF.preload('/assets/3d/transformed/plane-transformed.glb')
+
+export default Plane

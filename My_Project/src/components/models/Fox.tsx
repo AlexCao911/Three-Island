@@ -109,3 +109,5 @@ export function Fox({ currentAnimation = 'Survey', ...props }: FoxProps) {
 
 // Preload the fox model to improve performance
 useGLTF.preload('/assets/3d/transformed/fox-transformed.glb')
+
+export default Fox

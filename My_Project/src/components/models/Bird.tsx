@@ -77,3 +77,5 @@ export function Bird(props: BirdProps) {
 
 // Preload the bird model to improve performance
 useGLTF.preload('/assets/3d/transformed/bird-transformed.glb')
+
+export default Bird

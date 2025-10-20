@@ -16,8 +16,14 @@ Files: island_with_tower_v1.glb [7.62MB] > island_with_tower_v1-transformed.glb 
 */
 
 import { useGLTF } from '@react-three/drei'
-import { type JSX } from 'react'
 import * as THREE from 'three'
+
+interface SpaceshipProps {
+  isRotating?: boolean
+  position?: [number, number, number]
+  rotation?: [number, number, number]
+  scale?: [number, number, number] | number
+}
 
 interface GLTFResult {
   nodes: {
@@ -29,9 +35,9 @@ interface GLTFResult {
 }
 
 // Island with Tower V1 3D model - fantasy island featuring a prominent tower structure
-export function Spaceship(props: JSX.IntrinsicElements['group']) {
+export function Spaceship(props: SpaceshipProps) {
   // Load the 3D model from the provided GLTF file
-  const { nodes, materials } = useGLTF('/assets/3d/transformed/island_with_tower_v1-transformed.glb') as unknown as GLTFResult
+  const { nodes, materials } = useGLTF('/assets/3d/transformed/spaceship-transformed.glb') as unknown as GLTFResult
   
   return (
     // Create a group to contain the island with tower mesh
@@ -44,3 +50,5 @@ export function Spaceship(props: JSX.IntrinsicElements['group']) {
 
 // Preload the island with tower v1 model to improve performance
 useGLTF.preload('/assets/3d/transformed/spaceship-transformed.glb')
+
+export default Spaceship

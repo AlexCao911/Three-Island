@@ -1,12 +1,11 @@
 import { useState } from 'react';
-import './App.css';
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import Navbar from './components/Navbar.tsx';
 import { Home, About, Projects, Contact } from './pages';
 
 const App = () => {
   return (
-    <main className='bg-slate-300/20'>
+    <main className='bg-slate-300/20 h-screen w-full'>
       <Router>
         <Navbar />
         <Routes>
