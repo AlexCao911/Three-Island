@@ -35,6 +35,8 @@ export function Island({
   // Define a damping factor to control rotation damping
   const dampingFactor = 0.95;
 
+
+  // ================ Events Handling List ================
   // Handle pointer (mouse or touch) down event
   const handlePointerDown = (event) => {
     event.stopPropagation();
@@ -130,6 +132,7 @@ export function Island({
     }
   }
 
+  // ================ Listenning for those events ================
   useEffect(() => {
     // Add event listeners for pointer and keyboard events
     const canvas = gl.domElement;
@@ -155,6 +158,9 @@ export function Island({
     };
   }, [gl, handlePointerDown, handlePointerUp, handlePointerMove]);
 
+  // It's similar to Game Engine 
+  // Unity: Update()
+  // Godot: _process(delta)
   // This function is called on each frame update
   useFrame(() => {
     // If not rotating, apply damping to slow down the rotation (smoothly)
@@ -211,6 +217,7 @@ export function Island({
     }
   });
 
+  // ================ 3D Rendering ================
   return (
     // {Island 3D model from: https://sketchfab.com/3d-models/foxs-islands-163b68e09fcc47618450150be7785907}
     <a.group ref={islandRef} {...props}>
