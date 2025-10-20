@@ -30,7 +30,12 @@ interface BirdProps {
     scale?: [number, number, number] | number
 }
 
-// 3D Model from: https://sketchfab.com/3d-models/phoenix-bird-844ba0cf144a413ea92c779f18912042
+/**
+ * Renders a cloned GLTF phoenix bird model with its skinned meshes and animations into a Three.js scene.
+ *
+ * @param props - Optional transform props (position, rotation, scale) applied to the root group
+ * @returns A group containing the cloned model, its root joint, two skinned meshes, and wired animations
+ */
 export function Bird(props: BirdProps) {
     const group = useRef<THREE.Group>(null)
     

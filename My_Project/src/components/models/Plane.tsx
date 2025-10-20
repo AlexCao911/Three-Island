@@ -29,7 +29,15 @@ interface PlaneProps {
   scale?: [number, number, number] | number
 }
 
-// 3D Model from: https://sketchfab.com/3d-models/stylized-ww1-plane-c4edeb0e410f46e8a4db320879f0a1db
+/**
+ * Renders a stylized WWI plane 3D model as a React Three Fiber group.
+ *
+ * Loads the GLB model and its animations, attaches animation actions to the component's root group,
+ * and returns a grouped scene containing the plane's meshes and transforms.
+ *
+ * @param props - Props spread onto the root `<group>` (e.g., `position`, `rotation`, `scale`, or other group attributes)
+ * @returns The root JSX group element that contains the assembled plane model and its child groups
+ */
 export function Plane({ ...props }: PlaneProps) {
   const group = useRef<THREE.Group>(null)
   

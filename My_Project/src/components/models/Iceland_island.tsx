@@ -28,7 +28,12 @@ interface GLTFResult {
   }
 }
 
-// Iceland Island 3D model - detailed island terrain with natural features
+/**
+ * Renders a GLTF-based Iceland island mesh inside a root group.
+ *
+ * @param props - Props forwarded to the root <group> that contains the island mesh
+ * @returns A React Three Fiber group element with the island mesh (geometry from `nodes.model` and material from `materials.model`)
+ */
 export function IcelandIsland(props: JSX.IntrinsicElements['group']) {
   // Load the 3D model from the provided GLTF file
   const { nodes, materials } = useGLTF('/assets/3d/transformed/iceland_island-transformed.glb') as unknown as GLTFResult

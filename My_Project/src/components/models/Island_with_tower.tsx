@@ -40,7 +40,18 @@ interface GLTFResult {
   }
 }
 
-// Island with Tower 3D model - enhanced version of fantasy island with tower structure
+/**
+ * Renders the IslandWithTower GLTF model into a react-three-fiber scene.
+ *
+ * @param props - Component props controlling transform and interaction:
+ *   - `position` — optional [x, y, z] translation applied to the model group.
+ *   - `rotation` — optional [rotX, rotY, rotZ] rotation applied to the model group.
+ *   - `scale` — optional [sx, sy, sz] scale applied to the model group.
+ *   - `isRotating` — optional boolean indicating whether the model should be considered rotating.
+ *   - `setIsRotating` — optional callback to update the rotating state.
+ *   - `setCurrentStage` — optional callback to update the current stage selection.
+ * @returns A JSX group containing the island-with-tower mesh with the provided transforms applied.
+ */
 export function IslandWithTower(props: IslandWithTowerProps) {
   // Load the 3D model from the provided GLTF file
   const { nodes, materials } = useGLTF('/assets/3d/transformed/island_with_tower-transformed.glb') as unknown as GLTFResult
