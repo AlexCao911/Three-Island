@@ -28,7 +28,14 @@ interface GLTFResult {
   }
 }
 
-// Island with Tower V1 3D model - fantasy island featuring a prominent tower structure
+/**
+ * Renders the "island with tower" GLTF model inside a Three.js group.
+ *
+ * Loads the model from '/assets/3d/transformed/island_with_tower_v1-transformed.glb' and mounts its primary mesh.
+ *
+ * @param props - Props forwarded to the root `<group>` element
+ * @returns A JSX `<group>` containing the island-with-tower mesh
+ */
 export function Spaceship(props: JSX.IntrinsicElements['group']) {
   // Load the 3D model from the provided GLTF file
   const { nodes, materials } = useGLTF('/assets/3d/transformed/island_with_tower_v1-transformed.glb') as unknown as GLTFResult

@@ -28,7 +28,14 @@ interface SkyProps {
   scale?: [number, number, number] | number
 }
 
-// 3D Model from: https://sketchfab.com/3d-models/free-skybox-in-the-cloud-b270497defe24f9cb497b9a075eeb28f
+/**
+ * Render a GLTF-backed sky sphere that encloses the scene.
+ *
+ * Renders a grouped container whose single mesh uses the preloaded GLB's sphere geometry and material to form a distant sky dome.
+ *
+ * @param isRotating - When true, enables rotation of the sky mesh (rotation implementation is handled by the caller or surrounding animation logic)
+ * @returns A JSX group containing the sky sphere mesh configured from the GLTF model
+ */
 export function Sky({ isRotating, ...props }: SkyProps) {
   // Load the 3D model from the provided GLTF file
   const { nodes, materials } = useGLTF('/assets/3d/transformed/sky-transformed.glb')

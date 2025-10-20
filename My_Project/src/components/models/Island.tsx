@@ -32,7 +32,12 @@ interface IslandProps {
   setCurrentStage?: (stage: number) => void
 }
 
-// Island 3D model from: https://sketchfab.com/3d-models/foxs-islands-163b68e09fcc47618450150be7785907
+/**
+ * Renders the Island 3D model and its instanced tree meshes as a grouped React Three Fiber element.
+ *
+ * @param props - IslandProps passed through to the outer group to position, rotate, scale, and control rotation/state callbacks
+ * @returns A React element containing the island rock mesh and multiple instanced tree meshes
+ */
 export function Island(props: IslandProps) {
   // Load the 3D model from the provided GLTF file
   const { nodes, materials } = useGLTF('/assets/3d/transformed/island-transformed.glb')

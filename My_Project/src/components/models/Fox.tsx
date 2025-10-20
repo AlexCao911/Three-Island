@@ -34,7 +34,13 @@ interface FoxProps {
   scale?: [number, number, number] | number
 }
 
-// 3D Model from: https://sketchfab.com/3d-models/fox-f372c04de44640fbb6a4f9e4e5845c78
+/**
+ * Renders a skinned, animated 3D fox model and manages switching between its named animations.
+ *
+ * @param currentAnimation - The name of the animation to play ('Survey' | 'Walk' | 'Run'); defaults to 'Survey'
+ * @param props - Additional group props (position, rotation, scale, etc.) forwarded to the root <group>
+ * @returns A React Three Fiber group containing the cloned fox scene with skinned meshes and active animation playback
+ */
 export function Fox({ currentAnimation = 'Survey', ...props }: FoxProps) {
   const group = useRef<THREE.Group>(null)
   
