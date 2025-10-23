@@ -20,7 +20,7 @@ import * as THREE from 'three'
 
 interface SpaceshipProps {
   isRotating?: boolean
-  position?: [number, number, number]
+  position?: [number, number, number] | number
   rotation?: [number, number, number]
   scale?: [number, number, number] | number
 }
