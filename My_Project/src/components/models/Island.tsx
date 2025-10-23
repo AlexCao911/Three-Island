@@ -37,6 +37,7 @@ export function Island({
   isRotating,
   setIsRotating,
   setCurrentStage,
+
   ...props
 }: IslandProps) {
   // Create a reference to the island group for direct manipulation
@@ -48,75 +49,120 @@ export function Island({
   // Load the 3D model from the provided GLTF file
   const { nodes, materials } = useGLTF('/assets/3d/transformed/island-transformed.glb')
 
-  // Use a ref for the last mouse x position
+  // Enhanced interaction state management
   const lastX = useRef(0);
-
-  // Use a ref for rotation speed
   const rotationSpeed = useRef(0);
-
-  // Define a damping factor to control rotation damping
   const dampingFactor = 0.95;
+  
+  // Advanced interaction features
+  const isDragging = useRef(false);
+  const rotationMomentum = useRef(0);
+  const targetRotation = useRef(0);
+  const lastInteractionTime = useRef(Date.now());
+  
+  // Enhanced sensitivity and smoothing
+  const mouseSensitivity = 0.008; // Reduced for smoother control
+  const keyboardSensitivity = 0.003;
+  const momentumDecay = 0.92; // Smoother momentum decay
 
-  // Handle pointer (mouse or touch) down event
+  // Enhanced pointer down with better interaction feedback
   const handlePointerDown = useCallback((event: PointerEvent) => {
     event.stopPropagation();
     event.preventDefault();
+    
+    isDragging.current = true;
+    lastInteractionTime.current = Date.now();
+    
     if (setIsRotating) setIsRotating(true);
 
-    // Calculate the clientX based on whether it's a touch event or a mouse event
     const clientX = event.clientX;
     lastX.current = clientX;
+    
+    // Reset momentum when user starts interacting
+    rotationMomentum.current = 0;
+    
+    // Add subtle haptic feedback for mobile devices
+    if ('vibrate' in navigator) {
+      navigator.vibrate(10);
+    }
   }, [setIsRotating]);
 
-  // Handle pointer (mouse or touch) up event
+  // Enhanced pointer up with momentum preservation
   const handlePointerUp = useCallback((event: PointerEvent) => {
     event.stopPropagation();
     event.preventDefault();
+    
+    isDragging.current = false;
+    
+    // Preserve momentum for natural feel
+    rotationMomentum.current = rotationSpeed.current * 0.8;
+    
     if (setIsRotating) setIsRotating(false);
   }, [setIsRotating]);
 
-  // Handle pointer (mouse or touch) move event
+  // Enhanced pointer move with improved sensitivity and smoothing
   const handlePointerMove = useCallback((event: PointerEvent) => {
     event.stopPropagation();
     event.preventDefault();
 
-    if (isRotating && islandRef.current) {
-      // Calculate the change in the horizontal position of the mouse cursor or touch input,
-      // relative to the viewport's width
+    if (isDragging.current && islandRef.current) {
+      lastInteractionTime.current = Date.now();
+      
       const clientX = event.clientX;
-      const delta = (clientX - lastX.current) / viewport.width;
-
-      // Update the island's rotation based on the mouse/touch movement
-      islandRef.current.rotation.y += delta * 0.01 * Math.PI;
-
-      // Update the reference for the last clientX position
-      lastX.current = clientX;
-
-      // Update the rotation speed
-      rotationSpeed.current = delta * 0.01 * Math.PI;
-    }
-  }, [isRotating, viewport.width]);
-
-  // Handle keydown events
-  const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    if (event.key === "ArrowLeft") {
-      if (!isRotating && setIsRotating) setIsRotating(true);
+      const rawDelta = (clientX - lastX.current) / viewport.width;
+      
+      // Apply enhanced sensitivity with easing
+      const delta = rawDelta * mouseSensitivity * Math.PI;
+      
+      // Smooth rotation with interpolation
+      const smoothedDelta = delta * 0.7 + rotationSpeed.current * 0.3;
+      
       if (islandRef.current) {
-        islandRef.current.rotation.y += 0.005 * Math.PI;
-        rotationSpeed.current = 0.007;
+        islandRef.current.rotation.y += smoothedDelta;
+        targetRotation.current = islandRef.current.rotation.y;
       }
-    } else if (event.key === "ArrowRight") {
+
+      lastX.current = clientX;
+      rotationSpeed.current = smoothedDelta;
+    }
+  }, [viewport.width]);
+
+  // Enhanced keyboard controls with smooth acceleration
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    lastInteractionTime.current = Date.now();
+    
+    if (event.key === "ArrowLeft" || event.key === "a" || event.key === "A") {
+      event.preventDefault();
       if (!isRotating && setIsRotating) setIsRotating(true);
+      
+      const rotationDelta = keyboardSensitivity * Math.PI;
+      rotationSpeed.current = Math.min(rotationSpeed.current + rotationDelta, 0.02);
+      
       if (islandRef.current) {
-        islandRef.current.rotation.y -= 0.005 * Math.PI;
-        rotationSpeed.current = -0.007;
+        targetRotation.current += rotationDelta;
+      }
+    } else if (event.key === "ArrowRight" || event.key === "d" || event.key === "D") {
+      event.preventDefault();
+      if (!isRotating && setIsRotating) setIsRotating(true);
+      
+      const rotationDelta = -keyboardSensitivity * Math.PI;
+      rotationSpeed.current = Math.max(rotationSpeed.current + rotationDelta, -0.02);
+      
+      if (islandRef.current) {
+        targetRotation.current += rotationDelta;
       }
     }
   }, [isRotating, setIsRotating]);
 
-  // Handle keyup events
+  // Enhanced keyup with momentum preservation
   const handleKeyUp = useCallback((event: KeyboardEvent) => {
-    if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+    if (event.key === "ArrowLeft" || event.key === "ArrowRight" || 
+        event.key === "a" || event.key === "A" || 
+        event.key === "d" || event.key === "D") {
+      
+      // Preserve some momentum for natural feel
+      rotationMomentum.current = rotationSpeed.current * 0.5;
+      
       if (setIsRotating) setIsRotating(false);
     }
   }, [setIsRotating]);
@@ -176,96 +222,119 @@ export function Island({
     };
   }, [gl, handlePointerDown, handlePointerUp, handlePointerMove, handleKeyDown, handleKeyUp, handleTouchStart, handleTouchEnd, handleTouchMove]);
 
-  // This function is called on each frame update
-  useFrame(() => {
-    // If not rotating, apply damping to slow down the rotation (smoothly)
-    if (!isRotating && islandRef.current) {
-      // Apply damping factor
+  // Enhanced frame update with smooth interactions (auto-rotation disabled)
+  useFrame((state, delta) => {
+    if (!islandRef.current) return;
+
+    const currentTime = Date.now();
+    const timeSinceLastInteraction = currentTime - lastInteractionTime.current;
+    
+    // Enhanced rotation logic without auto-rotation
+    if (!isDragging.current && !isRotating) {
+      // Apply momentum decay
+      rotationMomentum.current *= momentumDecay;
       rotationSpeed.current *= dampingFactor;
 
-      // Stop rotation when speed is very small
-      if (Math.abs(rotationSpeed.current) < 0.001) {
+      // Apply momentum rotation only (no auto-rotation)
+      const totalRotation = rotationSpeed.current + rotationMomentum.current;
+      
+      if (Math.abs(totalRotation) > 0.0001) {
+        islandRef.current.rotation.y += totalRotation;
+        targetRotation.current = islandRef.current.rotation.y;
+      }
+
+      // Stop micro-movements
+      if (Math.abs(rotationSpeed.current) < 0.0001 && Math.abs(rotationMomentum.current) < 0.0001) {
         rotationSpeed.current = 0;
+        rotationMomentum.current = 0;
       }
-
-      islandRef.current.rotation.y += rotationSpeed.current;
-    } else if (islandRef.current) {
-      // When rotating, determine the current stage based on island's orientation
-      const rotation = islandRef.current.rotation.y;
-
-      /**
-       * Normalize the rotation value to ensure it stays within the range [0, 2 * Math.PI].
-       * The goal is to ensure that the rotation value remains within a specific range to
-       * prevent potential issues with very large or negative rotation values.
-       *  Here's a step-by-step explanation of what this code does:
-       *  1. rotation % (2 * Math.PI) calculates the remainder of the rotation value when divided
-       *     by 2 * Math.PI. This essentially wraps the rotation value around once it reaches a
-       *     full circle (360 degrees) so that it stays within the range of 0 to 2 * Math.PI.
-       *  2. (rotation % (2 * Math.PI)) + 2 * Math.PI adds 2 * Math.PI to the result from step 1.
-       *     This is done to ensure that the value remains positive and within the range of
-       *     0 to 2 * Math.PI even if it was negative after the modulo operation in step 1.
-       *  3. Finally, ((rotation % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI) applies another
-       *     modulo operation to the value obtained in step 2. This step guarantees that the value
-       *     always stays within the range of 0 to 2 * Math.PI, which is equivalent to a full
-       *     circle in radians.
-       */
-      const normalizedRotation = ((rotation % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
-
-      // Set the current stage based on the island's orientation
-      if (setCurrentStage) {
-        switch (true) {
-          case normalizedRotation >= 5.45 && normalizedRotation <= 5.85:
-            setCurrentStage(4);
-            break;
-          case normalizedRotation >= 0.85 && normalizedRotation <= 1.3:
-            setCurrentStage(3);
-            break;
-          case normalizedRotation >= 2.4 && normalizedRotation <= 2.6:
-            setCurrentStage(2);
-            break;
-          case normalizedRotation >= 4.25 && normalizedRotation <= 4.75:
-            setCurrentStage(1);
-            break;
-          default:
-            setCurrentStage(null);
-        }
+    } else {
+      // Smooth interpolation to target rotation during active interaction
+      const rotationDiff = targetRotation.current - islandRef.current.rotation.y;
+      if (Math.abs(rotationDiff) > 0.001) {
+        islandRef.current.rotation.y += rotationDiff * 0.1;
       }
+    }
+
+    // Enhanced stage detection with smoother transitions
+    const rotation = islandRef.current.rotation.y;
+    const normalizedRotation = ((rotation % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+
+    // More precise stage detection
+    if (setCurrentStage) {
+      let newStage: number | null = null;
+      
+      // Expanded stage ranges for smoother transitions
+      if (normalizedRotation >= 5.3 && normalizedRotation <= 6.0) {
+        newStage = 4;
+      } else if (normalizedRotation >= 0.7 && normalizedRotation <= 1.5) {
+        newStage = 3;
+      } else if (normalizedRotation >= 2.2 && normalizedRotation <= 2.8) {
+        newStage = 2;
+      } else if (normalizedRotation >= 4.0 && normalizedRotation <= 4.9) {
+        newStage = 1;
+      }
+      
+      setCurrentStage(newStage);
+    }
+
+    // Subtle floating animation when idle
+    if (timeSinceLastInteraction > 1000) {
+      const floatOffset = Math.sin(state.clock.elapsedTime * 0.5) * 0.02;
+      islandRef.current.position.y += floatOffset * delta;
     }
   });
 
   return (
-    // Island 3D model from: https://sketchfab.com/3d-models/foxs-islands-163b68e09fcc47618450150be7785907
+    // Island 3D model with enhanced interactions inspired by JOSHUA's World
     <a.group ref={islandRef} {...props}>
-      {/* Tree meshes - individual mesh components for each tree type */}
+      {/* Tree meshes with enhanced materials for better visual feedback */}
       <mesh
         geometry={(nodes.polySurface944_tree_body_0 as THREE.Mesh).geometry}
         material={materials.PaletteMaterial001}
+        castShadow
+        receiveShadow
       />
       <mesh
         geometry={(nodes.polySurface945_tree1_0 as THREE.Mesh).geometry}
         material={materials.PaletteMaterial001}
+        castShadow
+        receiveShadow
       />
       <mesh
         geometry={(nodes.polySurface946_tree2_0 as THREE.Mesh).geometry}
         material={materials.PaletteMaterial001}
+        castShadow
+        receiveShadow
       />
       <mesh
         geometry={(nodes.polySurface947_tree1_0 as THREE.Mesh).geometry}
         material={materials.PaletteMaterial001}
+        castShadow
+        receiveShadow
       />
       <mesh
         geometry={(nodes.polySurface948_tree_body_0 as THREE.Mesh).geometry}
         material={materials.PaletteMaterial001}
+        castShadow
+        receiveShadow
       />
       <mesh
         geometry={(nodes.polySurface949_tree_body_0 as THREE.Mesh).geometry}
         material={materials.PaletteMaterial001}
+        castShadow
+        receiveShadow
       />
-      {/* Main island rock base */}
+      {/* Main island rock base with enhanced shadows */}
       <mesh
         geometry={(nodes.pCube11_rocks1_0 as THREE.Mesh).geometry}
         material={materials.PaletteMaterial001}
+        castShadow
+        receiveShadow
       />
+      
+      {/* Subtle ambient particles for premium feel (optional) */}
+      {/* You can add particle effects here similar to JOSHUA's World */}
     </a.group>
   )
 }
