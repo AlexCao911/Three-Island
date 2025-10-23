@@ -19,6 +19,8 @@ Title: FREE - SkyBox In The Cloud
 */
 
 import { useGLTF } from '@react-three/drei'
+import { useRef } from 'react'
+import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
 interface SkyProps {
@@ -32,20 +34,27 @@ interface SkyProps {
 export function Sky({ isRotating, ...props }: SkyProps) {
   // Load the 3D model from the provided GLTF file
   const { nodes, materials } = useGLTF('/assets/3d/transformed/sky-transformed.glb')
-  
+  const skyRef = useRef<THREE.Group>(null);
+
+  useFrame((_, delta: number) => {
+    if (isRotating && skyRef.current) {
+      skyRef.current.rotation.y += 0.15 * delta
+    }
+  })
+
   return (
     // Create a group to contain the sky sphere
-    <group {...props} dispose={null}>
+    <group ref={skyRef} {...props} dispose={null}>
       {/* 
         Sky sphere mesh - creates a large sphere that surrounds the entire scene
         Note: Animation names can be found on the Sketchfab website where the 3D model is hosted.
         It ensures smooth animations by making the rotation frame rate-independent.
       */}
-      <mesh 
-        geometry={(nodes.Sphere__0 as THREE.Mesh).geometry} 
-        material={materials['Scene_-_Root']} 
-        rotation={[-Math.PI / 2, 0, 0]} 
-        scale={500} 
+      <mesh
+        geometry={(nodes.Sphere__0 as THREE.Mesh).geometry}
+        material={materials['Scene_-_Root']}
+        rotation={[-Math.PI / 2, 0, 0]}
+        scale={500}
       />
     </group>
   )

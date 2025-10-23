@@ -18,10 +18,9 @@ Source: https://sketchfab.com/3d-models/phoenix-bird-844ba0cf144a413ea92c779f189
 Title: phoenix bird
 */
 
-import { useRef, useMemo } from 'react'
-import { useGraph } from '@react-three/fiber'
+import { useRef, useEffect } from 'react'
+import { useFrame } from '@react-three/fiber'
 import { useGLTF, useAnimations } from '@react-three/drei'
-import { SkeletonUtils } from 'three-stdlib'
 import * as THREE from 'three'
 
 interface BirdProps {
@@ -32,46 +31,58 @@ interface BirdProps {
 
 // 3D Model from: https://sketchfab.com/3d-models/phoenix-bird-844ba0cf144a413ea92c779f18912042
 export function Bird(props: BirdProps) {
-    const group = useRef<THREE.Group>(null)
-    
+    const birdRef = useRef<THREE.Mesh>(null);
+
     // Load the 3D model and animations from the provided GLTF file
     const { scene, animations } = useGLTF('/assets/3d/transformed/bird-transformed.glb')
-    
-    // Clone the scene to avoid issues with multiple instances
-    const clone = useMemo(() => SkeletonUtils.clone(scene), [scene])
-    
-    // Extract nodes and materials from the cloned scene
-    const { nodes, materials } = useGraph(clone)
-    
+
     // Get access to the animations for the bird
-    useAnimations(animations, group)
+    const { actions } = useAnimations(animations, birdRef);
+
+    // Play the "Take 001" animation when the component mounts
+    // Note: Animation names can be found on the Sketchfab website where the 3D model is hosted.
+    useEffect(() => {
+        actions['Take 001']?.play();
+    }, [actions]);
+
+    useFrame(({ clock, camera }) => {
+        if (!birdRef.current) return;
+
+        // Update the Y position to simulate bird-like motion using a sine wave
+        birdRef.current.position.y = Math.sin(clock.elapsedTime) * 0.2 + 2;
+
+        // Check if the bird reached a certain endpoint relative to the camera
+        if (birdRef.current.position.x > camera.position.x + 10) {
+            // Change direction to backward and rotate the bird 180 degrees on the y-axis
+            birdRef.current.rotation.y = Math.PI;
+        } else if (birdRef.current.position.x < camera.position.x - 10) {
+            // Change direction to forward and reset the bird's rotation
+            birdRef.current.rotation.y = 0;
+        }
+
+        // Update the X and Z positions based on the direction
+        if (birdRef.current.rotation.y === 0) {
+            // Moving forward
+            birdRef.current.position.x += 0.01;
+            birdRef.current.position.z -= 0.01;
+        } else {
+            // Moving backward
+            birdRef.current.position.x -= 0.01;
+            birdRef.current.position.z += 0.01;
+        }
+    });
 
     return (
-        // Create a group to contain all bird mesh components
-        <group ref={group} {...props} dispose={null}>
-            <group name="Sketchfab_Scene">
-                {/* Root joint for the bird skeleton */}
-                <primitive object={nodes._rootJoint} />
-                
-                {/* Bird body parts - each skinned mesh represents a different part of the phoenix bird */}
-                <skinnedMesh
-                    name="Object_7"
-                    geometry={(nodes.Object_7 as THREE.SkinnedMesh).geometry}
-                    material={materials.MatI_Ride_FengHuang_01a}
-                    skeleton={(nodes.Object_7 as THREE.SkinnedMesh).skeleton}
-                    position={[-0.625, 0, -17.137]}
-                    rotation={[0, 0.053, 0]}
-                />
-                <skinnedMesh
-                    name="Object_8"
-                    geometry={(nodes.Object_8 as THREE.SkinnedMesh).geometry}
-                    material={materials.MatI_Ride_FengHuang_01b}
-                    skeleton={(nodes.Object_8 as THREE.SkinnedMesh).skeleton}
-                    position={[-0.625, 0, -17.137]}
-                    rotation={[0, 0.053, 0]}
-                />
-            </group>
-        </group>
+        // Create a mesh to contain the bird - using Reference values for position and scale
+        <mesh
+            ref={birdRef}
+            position={[-5, 2, 1]}
+            scale={[0.003, 0.003, 0.003]}
+            {...props}
+        >
+            {/* Use the primitive element to directly embed the 3D model */}
+            <primitive object={scene} />
+        </mesh>
     )
 }
 
